@@ -1,63 +1,72 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VFX EASY-PRO STUDIO</title>
+    <title>VFX OMNI-STUDIO v10 PRO</title>
     <style>
-        :root { --primary: #3498db; --bg: #1a1a1a; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .app-container { width: 100%; max-width: 400px; }
-        h1 { font-size: 1.2rem; text-align: center; margin-bottom: 20px; }
-        button { width: 100%; padding: 15px; margin: 8px 0; border: none; border-radius: 8px; background: #333; color: white; font-weight: bold; cursor: pointer; }
-        .btn-main { background: var(--primary); }
-        .slider-box { padding: 15px; background: #222; border-radius: 8px; margin: 10px 0; }
-        input[type="range"] { width: 100%; }
-        #canvas { width: 100%; aspect-ratio: 9/16; background: #000; border-radius: 8px; margin-bottom: 20px; }
+        :root { --neon: #00ffff; --bg: #08080a; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; padding: 15px; }
+        .tab-btn { padding: 10px; background: #222; border: none; color: #888; border-radius: 8px; margin: 2px; }
+        .tab-btn.active { background: var(--neon); color: black; font-weight: bold; }
+        canvas { width: 100%; max-width: 400px; aspect-ratio: 9/16; background: #000; display: block; margin: 10px auto; border-radius: 20px; }
+        .control-group { background: #141418; padding: 15px; border-radius: 15px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <h1>VFX EASY-PRO STUDIO</h1>
-    <canvas id="canvas" width="1080" height="1920"></canvas>
-    
-    <button class="btn-main" onclick="document.getElementById('fileInput').click()">ZACZNIJ PROJEKT</button>
-    <input type="file" id="fileInput" hidden onchange="loadPhoto(event)">
-    
-    <button onclick="toggleFilter('sepia(60%)')">FILMOWY KLIMAT (LUT)</button>
-    <button onclick="toggleFilter('saturate(200%)')">MAGIA KOLORÓW</button>
-    
-    <div class="slider-box">
-        <label>SZYBKA GUMKA (ROZMIAR)</label>
-        <input type="range" id="brush" min="10" max="200" value="50" oninput="updateBrush()">
+    <div id="tabs">
+        <button class="tab-btn active" onclick="showTab('edit')">EDIT</button>
+        <button class="tab-btn" onclick="showTab('color')">COLOR</button>
+        <button class="tab-btn" onclick="showTab('story')">VIDEO</button>
     </div>
 
-    <button class="btn-main" onclick="render()">RENDER PROJEKTU</button>
-</div>
+    <canvas id="canvas" width="1080" height="1920"></canvas>
 
-<script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    let img = new Image();
+    <div id="edit" class="control-group">
+        <input type="file" onchange="loadPhoto(event)">
+        <button onclick="mode='blur'">ENABLE BLUR</button>
+    </div>
 
-    function loadPhoto(e) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            img.onload = () => ctx.drawImage(img, 0, 0, 1080, 1920);
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(e.target.files[0]);
-    }
+    <div id="color" class="control-group" style="display:none">
+        <label>Brightness</label>
+        <input type="range" id="bright" min="0" max="200" value="100" oninput="apply()">
+        <button onclick="savePreset()">SAVE PRESET</button>
+        <button onclick="applyPreset()">APPLY PRESET</button>
+    </div>
 
-    function toggleFilter(f) {
-        ctx.filter = f;
-        ctx.drawImage(img, 0, 0, 1080, 1920);
-    }
+    <div id="story" class="control-group" style="display:none">
+        <input type="file" id="files" multiple>
+        <button onclick="render()">RENDER VIDEO</button>
+    </div>
 
-    function render() {
-        alert("Renderowanie... Twoje wideo będzie gotowe za chwilę!");
-    }
-</script>
+    <script>
+        let baseImg, preset = {b: 100};
+        
+        function showTab(id) {
+            document.querySelectorAll('.control-group').forEach(c => c.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function savePreset() { preset.b = document.getElementById('bright').value; alert("Preset saved!"); }
+        function applyPreset() { document.getElementById('bright').value = preset.b; apply(); }
+        
+        function apply() {
+            const b = document.getElementById('bright').value;
+            const ctx = document.getElementById('canvas').getContext('2d');
+            ctx.filter = `brightness(${b}%)`;
+            if(baseImg) ctx.drawImage(baseImg, 0, 0, 1080, 1920);
+        }
+
+        function loadPhoto(e) {
+            const r = new FileReader();
+            r.onload = e => {
+                baseImg = new Image();
+                baseImg.onload = () => document.getElementById('canvas').getContext('2d').drawImage(baseImg, 0, 0, 1080, 1920);
+                baseImg.src = e.target.result;
+            };
+            r.readAsDataURL(e.target.files[0]);
+        }
+    </script>
 </body>
 </html>
