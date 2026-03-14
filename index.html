@@ -16,28 +16,27 @@
 <body>
 
     <div id="tabs">
-        <button class="tab-btn active" onclick="showTab('edit')">EDIT</button>
-        <button class="tab-btn" onclick="showTab('color')">COLOR</button>
-        <button class="tab-btn" onclick="showTab('story')">VIDEO</button>
+        <button class="tab-btn active" onclick="showTab('edit')">EDYCJA</button>
+        <button class="tab-btn" onclick="showTab('color')">KOLOR</button>
+        <button class="tab-btn" onclick="showTab('story')">WIDEO</button>
     </div>
 
     <canvas id="canvas" width="1080" height="1920"></canvas>
 
     <div id="edit" class="control-group">
         <input type="file" onchange="loadPhoto(event)">
-        <button onclick="mode='blur'">ENABLE BLUR</button>
+        <button onclick="mode='blur'">WŁĄCZ BLUR</button>
     </div>
 
     <div id="color" class="control-group" style="display:none">
-        <label>Brightness</label>
         <input type="range" id="bright" min="0" max="200" value="100" oninput="apply()">
-        <button onclick="savePreset()">SAVE PRESET</button>
-        <button onclick="applyPreset()">APPLY PRESET</button>
+        <button onclick="savePreset()">ZAPISZ JAKO PRESET</button>
+        <button onclick="applyPreset()">ZASTOSUJ PRESET</button>
     </div>
 
     <div id="story" class="control-group" style="display:none">
         <input type="file" id="files" multiple>
-        <button onclick="render()">RENDER VIDEO</button>
+        <button onclick="render()">RENDERUJ WIDEO</button>
     </div>
 
     <script>
@@ -48,14 +47,14 @@
             document.getElementById(id).style.display = 'block';
         }
 
-        function savePreset() { preset.b = document.getElementById('bright').value; alert("Preset saved!"); }
+        function savePreset() { preset.b = document.getElementById('bright').value; alert("Preset zapisany!"); }
         function applyPreset() { document.getElementById('bright').value = preset.b; apply(); }
         
         function apply() {
             const b = document.getElementById('bright').value;
             const ctx = document.getElementById('canvas').getContext('2d');
             ctx.filter = `brightness(${b}%)`;
-            if(baseImg) ctx.drawImage(baseImg, 0, 0, 1080, 1920);
+            ctx.drawImage(baseImg, 0, 0, 1080, 1920);
         }
 
         function loadPhoto(e) {
