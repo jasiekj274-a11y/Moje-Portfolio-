@@ -3,69 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VFX OMNI-STUDIO v10 PRO</title>
+    <title>VFX SMART DASHBOARD</title>
     <style>
         :root { --neon: #00ffff; --bg: #08080a; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; padding: 15px; }
-        .tab-btn { padding: 10px; background: #222; border: none; color: #888; border-radius: 8px; margin: 2px; }
-        .tab-btn.active { background: var(--neon); color: black; font-weight: bold; }
-        canvas { width: 100%; max-width: 400px; aspect-ratio: 9/16; background: #000; display: block; margin: 10px auto; border-radius: 20px; }
-        .control-group { background: #141418; padding: 15px; border-radius: 15px; margin-top: 10px; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; padding: 20px; margin: 0; }
+        .dashboard { max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+        #canvas { width: 100%; aspect-ratio: 9/16; background: #111; border-radius: 15px; border: 1px solid #333; }
+        .tool-btn { padding: 18px; background: #151515; border: 1px solid #333; border-radius: 12px; color: white; text-align: left; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .tool-btn:hover { border-color: var(--neon); }
+        .main-render { background: var(--neon); color: black; padding: 20px; font-weight: bold; border-radius: 12px; border: none; margin-top: 10px; cursor: pointer; }
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="tabs">
-        <button class="tab-btn active" onclick="showTab('edit')">EDYCJA</button>
-        <button class="tab-btn" onclick="showTab('color')">KOLOR</button>
-        <button class="tab-btn" onclick="showTab('story')">WIDEO</button>
-    </div>
-
+<div class="dashboard">
     <canvas id="canvas" width="1080" height="1920"></canvas>
+    
+    <label class="tool-btn" for="fileInput">📁 LOAD IMAGE</label>
+    <input type="file" id="fileInput" accept="image/*" onchange="loadPhoto(event)">
+    
+    <button class="tool-btn" onclick="applyBlur()">🎨 BLUR / ERASE TOOL</button>
+    <button class="tool-btn" onclick="applyMagic()">✨ AUTO COLOR FIX</button>
+    
+    <button class="main-render" onclick="render()">RENDER FINAL VIDEO</button>
+</div>
 
-    <div id="edit" class="control-group">
-        <input type="file" onchange="loadPhoto(event)">
-        <button onclick="mode='blur'">WŁĄCZ BLUR</button>
-    </div>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let img = new Image();
 
-    <div id="color" class="control-group" style="display:none">
-        <input type="range" id="bright" min="0" max="200" value="100" oninput="apply()">
-        <button onclick="savePreset()">ZAPISZ JAKO PRESET</button>
-        <button onclick="applyPreset()">ZASTOSUJ PRESET</button>
-    </div>
+    function loadPhoto(e) {
+        const reader = new FileReader();
+        reader.onload = event => {
+            img.onload = () => ctx.drawImage(img, 0, 0, 1080, 1920);
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
 
-    <div id="story" class="control-group" style="display:none">
-        <input type="file" id="files" multiple>
-        <button onclick="render()">RENDERUJ WIDEO</button>
-    </div>
+    function applyBlur() {
+        ctx.filter = 'blur(15px)';
+        ctx.drawImage(img, 0, 0, 1080, 1920);
+        ctx.filter = 'none';
+        alert("Blur applied!");
+    }
 
-    <script>
-        let baseImg, preset = {b: 100};
-        
-        function showTab(id) {
-            document.querySelectorAll('.control-group').forEach(c => c.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
-        }
+    function applyMagic() {
+        ctx.filter = 'contrast(120%) saturate(130%) brightness(110%)';
+        ctx.drawImage(img, 0, 0, 1080, 1920);
+        ctx.filter = 'none';
+    }
 
-        function savePreset() { preset.b = document.getElementById('bright').value; alert("Preset zapisany!"); }
-        function applyPreset() { document.getElementById('bright').value = preset.b; apply(); }
-        
-        function apply() {
-            const b = document.getElementById('bright').value;
-            const ctx = document.getElementById('canvas').getContext('2d');
-            ctx.filter = `brightness(${b}%)`;
-            ctx.drawImage(baseImg, 0, 0, 1080, 1920);
-        }
-
-        function loadPhoto(e) {
-            const r = new FileReader();
-            r.onload = e => {
-                baseImg = new Image();
-                baseImg.onload = () => document.getElementById('canvas').getContext('2d').drawImage(baseImg, 0, 0, 1080, 1920);
-                baseImg.src = e.target.result;
-            };
-            r.readAsDataURL(e.target.files[0]);
-        }
-    </script>
+    function render() {
+        alert("Exporting professional video... please wait.");
+    }
+</script>
 </body>
 </html>
