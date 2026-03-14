@@ -1,92 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VFX PRO GENERATOR</title>
-  <style>
-    body { background: #0b0e14; color: #ffffff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-    h2 { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
-    canvas { border: 2px solid #00ffff; box-shadow: 0 0 20px #00ffff; max-width: 90%; height: auto; background: #000; }
-    .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; }
-    button { padding: 15px; border: none; background: #00ffff; font-weight: bold; cursor: pointer; text-transform: uppercase; color: #000; }
-    #status { color: #00ffff; margin: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VFX ULTIMATE OMNI-STUDIO</title>
+    <style>
+        :root { --neon: #00ffff; --bg: #08080a; --card: #141418; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
+        .header h1 { font-size: 1rem; color: var(--neon); letter-spacing: 2px; margin: 0; }
+
+        canvas { background: #000; width: 100%; max-width: 380px; aspect-ratio: 9/16; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); margin-top: 10px; touch-action: none; border: 1px solid #333; }
+
+        .editor-panel { width: 100%; max-width: 380px; background: var(--card); border-radius: 25px; padding: 15px; margin-top: 15px; box-sizing: border-box; border: 1px solid #222; }
+        
+        .label-group { font-size: 0.7rem; color: #666; text-transform: uppercase; margin: 12px 0 6px 0; font-weight: 800; display: flex; justify-content: space-between; }
+        
+        input, select, button { width: 100%; padding: 14px; background: #1c1c22; border: 1px solid #333; color: white; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem; box-sizing: border-box; transition: 0.3s; }
+        
+        .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        button { cursor: pointer; border: none; font-weight: bold; text-transform: uppercase; }
+        .btn-action { background: var(--neon); color: #000; height: 55px; font-size: 1rem; }
+        .btn-tool { background: #25252b; color: #fff; font-size: 0.75rem; }
+        .btn-tool.active { background: #fff; color: #000; }
+        .btn-download { background: #fff; color: #000; }
+
+        #progress-container { width: 100%; height: 6px; background: #222; border-radius: 3px; margin: 15px 0; display: none; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 10px var(--neon); }
+    </style>
 </head>
 <body>
 
-  <h2>VFX PRO GENERATOR</h2>
-  <canvas id="canvas" width="400" height="711"></canvas>
-  <div id="status">Ready to create</div>
+    <div class="header">
+        <h1>VFX_OMNI_PRO <span style="font-weight: 200;">v5</span></h1>
+        <div id="status-dot" style="width:10px; height:10px; background: #555; border-radius: 50%;"></div>
+    </div>
 
-  <div class="controls">
-    <input type="file" id="upload" multiple accept="image/*">
-    <button onclick="startSlideshow()">1. RENDER VIDEO</button>
-    <button onclick="stopRecording()">2. DOWNLOAD FILE</button>
-  </div>
+    <canvas id="studioCanvas" width="1080" height="1920"></canvas>
+    
+    <div id="progress-container"><div id="progress-bar"></div></div>
 
-  <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const status = document.getElementById('status');
-    let images = [], mediaRecorder, chunks = [];
+    <div class="editor-panel">
+        <div class="label-group"><span>1. Media Library</span></div>
+        <input type="file" id="mediaInput" multiple accept="image/*">
+        <input type="file" id="musicInput" accept="audio/*" placeholder="Add Background Music">
 
-    document.getElementById('upload').onchange = (e) => { 
-      images = Array.from(e.target.files);
-      status.innerText = images.length + " files loaded";
-    };
+        <div class="label-group"><span>2. Object Eraser & Blur Tool</span></div>
+        <div class="tool-grid">
+            <button class="btn-tool" onclick="prepareEdit()">Edit Photo</button>
+            <button id="blurBtn" class="btn-tool" onclick="setMode('blur')">Blur/Erase</button>
+        </div>
+        <input type="range" id="brushSize" min="10" max="150" value="50">
 
-    function drawFrame(img, alpha) {
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, 400, 711);
-      ctx.globalAlpha = alpha;
-      ctx.drawImage(img, 0, 0, 400, 711);
-      ctx.globalAlpha = 1.0;
-      ctx.fillStyle = "#00ffff";
-      ctx.font = "bold 20px Courier New";
-      ctx.fillText("VFX_PRO | PRODUCTION", 20, 680);
-    }
+        <div class="label-group"><span>3. Studio Typography</span></div>
+        <input type="text" id="videoText" placeholder="Headline (e.g. LUXURY CARS)">
+        <div class="tool-grid">
+            <input type="color" id="colorPicker" value="#00ffff" style="height: 50px; padding: 5px;">
+            <select id="filterPicker">
+                <option value="none">Standard</option>
+                <option value="contrast(140%) saturate(150%)">Vivid Commercial</option>
+                <option value="grayscale(100%) brightness(120%)">Elegant Noir</option>
+                <option value="hue-rotate(180deg) brightness(1.2)">Neon Future</option>
+            </select>
+        </div>
 
-    async function startSlideshow() {
-      if (images.length === 0) return alert("Select files first!");
-      status.innerText = "Recording...";
-      chunks = [];
-      const stream = canvas.captureStream(30);
-      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      mediaRecorder.ondataavailable = e => chunks.push(e.data);
-      mediaRecorder.start();
+        <button class="btn-action" onclick="renderVFX()">Render Master Video</button>
+        <button class="btn-download" onclick="exportVideo()">Save to Gallery</button>
+    </div>
 
-      for (let file of images) {
-        const img = await new Promise(resolve => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const i = new Image();
-            i.onload = () => resolve(i);
-            i.src = e.target.result;
-          };
-          reader.readAsDataURL(file);
-        });
-        for(let i=0; i<=1; i+=0.1) {
-          drawFrame(img, i);
-          await new Promise(r => setTimeout(r, 50));
+    <script>
+        const canvas = document.getElementById('studioCanvas');
+        const ctx = canvas.getContext('2d');
+        const bar = document.getElementById('progress-bar');
+        
+        let images = [], chunks = [], mediaRecorder, music = null;
+        let isEditing = false, editMode = 'none', brushSize = 50;
+        let editedImage = null;
+
+        // Music Handling
+        document.getElementById('musicInput').onchange = (e) => {
+            music = new Audio(URL.createObjectURL(e.target.files[0]));
+        };
+
+        // Media Handling
+        document.getElementById('mediaInput').onchange = (e) => {
+            images = Array.from(e.target.files);
+            document.getElementById('status-dot').style.background = '#00ffff';
+        };
+
+        // -- EDYTOWANIE --
+        function prepareEdit() {
+            if (images.length === 0) return alert("Select photos first");
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, 1080, 1920);
+                    editedImage = img;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(images[0]);
         }
-        await new Promise(r => setTimeout(r, 1000));
-      }
-      mediaRecorder.stop();
-      status.innerText = "Done! Click DOWNLOAD.";
-    }
 
-    function stopRecording() {
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'vfx-video.webm';
-        a.click();
-        status.innerText = "Saved!";
-      };
-    }
-  </script>
+        function setMode(mode) {
+            editMode = mode;
+            document.getElementById('blurBtn').classList.add('active');
+        }
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (editMode === 'none') return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = (touch.clientX - rect.left) * (1080 / rect.width);
+            const y = (touch.clientY - rect.top) * (1080 / rect.width); // Keep aspect ratio logic
+
+            if (editMode === 'blur') {
+                ctx.filter = 'blur(15px)';
+                ctx.drawImage(canvas, x - brushSize/2, y - brushSize/2, brushSize, brushSize, x - brushSize/2, y - brushSize/2, brushSize, brushSize);
+                ctx.filter = 'none';
+            }
+        });
+
+        // -- RENDERING --
+        async function renderVFX() {
+            if (images.length === 0) return alert("No media loaded");
+            
+            document.getElementById('progress-container').style.display = 'block';
+            const headline = document.getElementById('videoText').value.toUpperCase();
+            const color = document.getElementById('colorPicker').value;
+            const filter = document.getElementById('filterPicker').value;
+
+            chunks = [];
+            const stream = canvas.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.start();
+
+            if (music) music.play();
+
+            for (let [idx, file] of images.entries()) {
+                const img = (idx === 0 && editedImage) ? await getEdited() : await loadImg(file);
+                
+                for (let f = 0; f < 60; f++) {
+                    ctx.filter = filter;
+                    let scale = 1 + (f * 0.002);
+                    ctx.drawImage(img, (1080 - 1080*scale)/2, (1920 - 1920*scale)/2, 1080*scale, 1920*scale);
+                    
+                    ctx.filter = 'none';
+                    if (headline) {
+                        ctx.fillStyle = "rgba(0,0,0,0.6)";
+                        ctx.fillRect(0, 1600, 1080, 320);
+                        ctx.fillStyle = color;
+                        ctx.font = "bold 90px sans-serif";
+                        ctx.textAlign = "center";
+                        ctx.fillText(headline, 540, 1800);
+                    }
+                    
+                    bar.style.width = `${((idx * 60 + f) / (images.length * 60)) * 100}%`;
+                    await new Promise(r => setTimeout(r, 16));
+                }
+            }
+
+            mediaRecorder.stop();
+            if (music) music.pause();
+            alert("VFX Render Complete");
+        }
+
+        function loadImg(file) {
+            return new Promise(r => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => r(img);
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function getEdited() {
+            return new Promise(r => {
+                const img = new Image();
+                img.onload = () => r(img);
+                img.src = canvas.toDataURL();
+            });
+        }
+
+        function exportVideo() {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'VFX_OMNI_MASTER.webm';
+            a.click();
+        }
+    </script>
 </body>
 </html>
