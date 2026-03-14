@@ -1,103 +1,55 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VFX PRO GENERATOR</title>
   <style>
-    /* Stylistyka VFX Neon Pro */
-    body { 
-      background: #0b0e14; 
-      color: #ffffff; 
-      font-family: 'Courier New', monospace; 
-      text-align: center; 
-      margin: 0; 
-      padding: 20px; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-    }
+    body { background: #0b0e14; color: #ffffff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; }
     h2 { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
-    canvas { 
-      border: 2px solid #00ffff; 
-      box-shadow: 0 0 20px #00ffff; 
-      max-width: 90%; 
-      height: auto; 
-      background: #000;
-    }
-    .controls { 
-      margin-top: 20px; 
-      display: flex; 
-      flex-direction: column; 
-      gap: 15px; 
-      width: 100%; 
-      max-width: 300px; 
-    }
-    input[type="file"] { color: #00ffff; }
-    button { 
-      padding: 15px; 
-      cursor: pointer; 
-      background: #00ffff; 
-      border: none; 
-      font-weight: bold; 
-      color: #0b0e14;
-      text-transform: uppercase;
-      transition: 0.3s;
-    }
-    button:hover { background: #ffffff; box-shadow: 0 0 15px #ffffff; }
-    #status { color: #00ffff; margin-top: 10px; font-size: 14px; }
+    canvas { border: 2px solid #00ffff; box-shadow: 0 0 20px #00ffff; max-width: 90%; height: auto; background: #000; }
+    .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; }
+    button { padding: 15px; border: none; background: #00ffff; font-weight: bold; cursor: pointer; text-transform: uppercase; color: #000; }
+    #status { color: #00ffff; margin: 10px; }
   </style>
 </head>
 <body>
 
-  <h2>VFX_PRO GENERATOR</h2>
-  
+  <h2>VFX PRO GENERATOR</h2>
   <canvas id="canvas" width="400" height="711"></canvas>
-  
-  <div id="status">Gotowy do pracy</div>
+  <div id="status">Ready to create</div>
 
   <div class="controls">
     <input type="file" id="upload" multiple accept="image/*">
-    <button onclick="startSlideshow()">1. RENDERUJ WIDEO</button>
-    <button onclick="stopRecording()">2. POBIERZ GOTOWY PLIK</button>
+    <button onclick="startSlideshow()">1. RENDER VIDEO</button>
+    <button onclick="stopRecording()">2. DOWNLOAD FILE</button>
   </div>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const status = document.getElementById('status');
-    let images = [];
-    let mediaRecorder, chunks = [];
+    let images = [], mediaRecorder, chunks = [];
 
     document.getElementById('upload').onchange = (e) => { 
       images = Array.from(e.target.files);
-      status.innerText = "Załadowano zdjęć: " + images.length;
+      status.innerText = images.length + " files loaded";
     };
 
-    async function drawFrame(img, alpha, textAlpha) {
-      ctx.clearRect(0, 0, 400, 711);
-      
-      // Zdjęcie
+    function drawFrame(img, alpha) {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, 400, 711);
       ctx.globalAlpha = alpha;
       ctx.drawImage(img, 0, 0, 400, 711);
-      
-      // Branding stały
-      ctx.globalAlpha = 0.8;
+      ctx.globalAlpha = 1.0;
       ctx.fillStyle = "#00ffff";
-      ctx.font = "bold 18px Arial";
-      ctx.fillText("VFX_PRO | DESIGN MASTER", 20, 680);
-      
-      // Tekst animowany
-      ctx.globalAlpha = textAlpha;
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 26px Arial";
-      ctx.fillText("PRECISION OVER VOLUME", 30, 355);
+      ctx.font = "bold 20px Courier New";
+      ctx.fillText("VFX_PRO | PRODUCTION", 20, 680);
     }
 
     async function startSlideshow() {
-      if (images.length === 0) return alert("Najpierw wybierz zdjęcia!");
-      
-      status.innerText = "Nagrywanie w toku...";
+      if (images.length === 0) return alert("Select files first!");
+      status.innerText = "Recording...";
       chunks = [];
       const stream = canvas.captureStream(30);
       mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
@@ -112,5 +64,29 @@
             i.onload = () => resolve(i);
             i.src = e.target.result;
           };
-          reader.
-    
+          reader.readAsDataURL(file);
+        });
+        for(let i=0; i<=1; i+=0.1) {
+          drawFrame(img, i);
+          await new Promise(r => setTimeout(r, 50));
+        }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      mediaRecorder.stop();
+      status.innerText = "Done! Click DOWNLOAD.";
+    }
+
+    function stopRecording() {
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'vfx-video.webm';
+        a.click();
+        status.innerText = "Saved!";
+      };
+    }
+  </script>
+</body>
+</html>
