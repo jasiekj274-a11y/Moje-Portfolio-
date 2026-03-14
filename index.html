@@ -1,47 +1,85 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VFX CANVA-STYLE STUDIO</title>
+    <title>VFX PRO OMNI-STUDIO</title>
     <style>
-        body { margin: 0; display: flex; height: 100vh; background: #f0f2f5; font-family: sans-serif; overflow: hidden; }
-        .sidebar { width: 70px; background: #222; display: flex; flex-direction: column; align-items: center; padding-top: 20px; z-index: 10; }
-        .icon { width: 50px; height: 50px; background: #333; margin-bottom: 20px; border-radius: 10px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-        .workspace { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        #canvas { background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 100%; max-height: 100%; border-radius: 5px; }
+        :root { --neon: #00ffff; --bg: #121212; --panel: #1e1e1e; }
+        body { margin: 0; display: flex; height: 100vh; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        /* Sidebar */
+        .sidebar { width: 70px; background: var(--panel); display: flex; flex-direction: column; align-items: center; padding-top: 20px; z-index: 10; border-right: 1px solid #333; }
+        .icon { width: 50px; height: 50px; background: #333; margin-bottom: 20px; border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 20px; transition: 0.3s; }
+        .icon:hover { background: var(--neon); color: black; }
+        /* Workspace */
+        .workspace { flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        #canvas { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 8px; width: 100%; max-width: 400px; aspect-ratio: 9/16; }
+        /* Properties */
+        .properties { width: 260px; background: var(--panel); padding: 20px; border-left: 1px solid #333; }
+        input[type="range"] { width: 100%; margin: 15px 0; }
+        button { width: 100%; padding: 12px; margin: 5px 0; background: #333; color: white; border: none; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <label class="icon" for="fileInput">🖼️</label>
-        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleImage(event)">
-        
-        <div class="icon" onclick="alert('Tekst w budowie')">T</div>
-        <div class="icon" onclick="alert('Filtry w budowie')">✨</div>
+        <label class="icon" for="fileInput" title="Load">🖼️</label>
+        <input type="file" id="fileInput" hidden onchange="loadPhoto(event)">
+        <div class="icon" onclick="setLang('pl')">PL</div>
+        <div class="icon" onclick="setLang('en')">EN</div>
     </div>
 
     <div class="workspace">
-        <canvas id="canvas" width="800" height="1200"></canvas>
+        <canvas id="canvas" width="1080" height="1920"></canvas>
+    </div>
+
+    <div class="properties">
+        <h3 id="title-props">PROPERTIES</h3>
+        <label id="lbl-bright">Brightness</label>
+        <input type="range" id="bright" min="0" max="200" value="100" oninput="applyFilters()">
+        
+        <button onclick="savePreset()" id="btn-save">SAVE PRESET</button>
+        <button onclick="applyPreset()" id="btn-apply">APPLY PRESET</button>
+        <button onclick="render()" id="btn-render" style="background: var(--neon); color: black; font-weight: bold;">RENDER 4K</button>
     </div>
 
     <script>
-        function handleImage(e) {
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const reader = new FileReader();
-            
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                }
-                img.src = event.target.result;
-            }
-            reader.readAsDataURL(e.target.files[0]);
+        let img = new Image(), preset = {b: 100};
+        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+
+        function loadPhoto(e) {
+            const r = new FileReader();
+            r.onload = e => { img.src = e.target.result; img.onload = () => applyFilters(); };
+            r.readAsDataURL(e.target.files[0]);
         }
+
+        function applyFilters() {
+            const b = document.getElementById('bright').value;
+            ctx.filter = `brightness(${b}%)`;
+            ctx.drawImage(img, 0, 0, 1080, 1920);
+            localStorage.setItem('vfx_settings', JSON.stringify({b: b}));
+        }
+
+        function savePreset() { preset.b = document.getElementById('bright').value; alert("Saved!"); }
+        function applyPreset() { document.getElementById('bright').value = preset.b; applyFilters(); }
+        function render() { alert("Rendering to 4K Master..."); }
+
+        function setLang(lang) {
+            const tr = {
+                en: { props: "PROPERTIES", bright: "Brightness", save: "SAVE PRESET", apply: "APPLY PRESET", render: "RENDER 4K" },
+                pl: { props: "WŁAŚCIWOŚCI", bright: "Jasność", save: "ZAPISZ PRESET", apply: "ZASTOSUJ PRESET", render: "RENDERUJ 4K" }
+            };
+            document.getElementById('title-props').innerText = tr[lang].props;
+            document.getElementById('lbl-bright').innerText = tr[lang].bright;
+            document.getElementById('btn-save').innerText = tr[lang].save;
+            document.getElementById('btn-apply').innerText = tr[lang].apply;
+            document.getElementById('btn-render').innerText = tr[lang].render;
+        }
+
+        window.onload = () => {
+            const saved = localStorage.getItem('vfx_settings');
+            if(saved) document.getElementById('bright').value = JSON.parse(saved).b;
+        };
     </script>
 </body>
 </html>
