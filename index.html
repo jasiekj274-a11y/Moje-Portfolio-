@@ -1,51 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>VFX SMART DASHBOARD</title>
+    <title>VFX CANVA-STYLE STUDIO</title>
     <style>
-        :root { --neon: #00ffff; --bg: #08080a; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; padding: 20px; margin: 0; }
-        .dashboard { max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-        #canvas { width: 100%; aspect-ratio: 9/16; background: #111; border-radius: 15px; border: 1px solid #333; }
-        .tool-btn { padding: 18px; background: #151515; border: 1px solid #333; border-radius: 12px; color: white; text-align: left; font-weight: bold; cursor: pointer; }
-        .lang-switch { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-        .lang-btn { background: #222; border: 1px solid #444; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
+        body { margin: 0; display: flex; height: 100vh; background: #f0f2f5; font-family: sans-serif; }
+        /* Pasek narzędzi (Sidebar) */
+        .sidebar { width: 80px; background: #222; display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+        .icon { width: 50px; height: 50px; background: #333; margin-bottom: 20px; border-radius: 10px; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; }
+        /* Główny obszar */
+        .workspace { flex-grow: 1; display: flex; justify-content: center; align-items: center; }
+        #canvas { background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.2); cursor: move; }
+        /* Panel właściwości */
+        .properties { width: 250px; background: #fff; padding: 20px; border-left: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <div class="lang-switch">
-        <button class="lang-btn" onclick="setLang('en')">EN</button>
-        <button class="lang-btn" onclick="setLang('pl')">PL</button>
+    <div class="sidebar">
+        <div class="icon" onclick="alert('Wczytaj obraz')">🖼️</div>
+        <div class="icon" onclick="alert('Dodaj tekst')">T</div>
+        <div class="icon" onclick="alert('Filtry')">✨</div>
     </div>
 
-    <canvas id="canvas" width="1080" height="1920"></canvas>
-    
-    <label class="tool-btn" id="btn-load" for="fileInput">📁 LOAD IMAGE</label>
-    <input type="file" id="fileInput" accept="image/*" hidden onchange="loadPhoto(event)">
-    
-    <button class="tool-btn" id="btn-blur" onclick="alert('Blur')">🎨 BLUR / ERASE TOOL</button>
-    <button class="tool-btn" id="btn-magic" onclick="alert('Magic')">✨ AUTO COLOR FIX</button>
-    
-    <button class="tool-btn" id="btn-render" style="background: var(--neon); color: black;" onclick="alert('Rendering')">RENDER FINAL VIDEO</button>
-</div>
+    <div class="workspace">
+        <canvas id="canvas" width="400" height="700"></canvas>
+    </div>
 
-<script>
-    const translations = {
-        en: { load: "📁 LOAD IMAGE", blur: "🎨 BLUR / ERASE TOOL", magic: "✨ AUTO COLOR FIX", render: "RENDER FINAL VIDEO" },
-        pl: { load: "📁 WCZYTAJ ZDJĘCIE", blur: "🎨 GUMKA / ROZMYCIE", magic: "✨ AUTO-KOLOR", render: "RENDERUJ WIDEO" }
-    };
+    <div class="properties">
+        <h3>Właściwości</h3>
+        <label>Jasność</label>
+        <input type="range" style="width:100%">
+    </div>
 
-    function setLang(lang) {
-        document.getElementById('btn-load').innerText = translations[lang].load;
-        document.getElementById('btn-blur').innerText = translations[lang].blur;
-        document.getElementById('btn-magic').innerText = translations[lang].magic;
-        document.getElementById('btn-render').innerText = translations[lang].render;
-    }
-
-    // Pozostała logika (loadPhoto itp.) pozostaje bez zmian
-</script>
 </body>
 </html>
