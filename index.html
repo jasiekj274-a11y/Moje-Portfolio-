@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VFX PRO GENERATOR</title>
+  <style>
+    /* Stylistyka VFX Neon Pro */
+    body { 
+      background: #0b0e14; 
+      color: #ffffff; 
+      font-family: 'Courier New', monospace; 
+      text-align: center; 
+      margin: 0; 
+      padding: 20px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+    }
+    h2 { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+    canvas { 
+      border: 2px solid #00ffff; 
+      box-shadow: 0 0 20px #00ffff; 
+      max-width: 90%; 
+      height: auto; 
+      background: #000;
+    }
+    .controls { 
+      margin-top: 20px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+      width: 100%; 
+      max-width: 300px; 
+    }
+    input[type="file"] { color: #00ffff; }
+    button { 
+      padding: 15px; 
+      cursor: pointer; 
+      background: #00ffff; 
+      border: none; 
+      font-weight: bold; 
+      color: #0b0e14;
+      text-transform: uppercase;
+      transition: 0.3s;
+    }
+    button:hover { background: #ffffff; box-shadow: 0 0 15px #ffffff; }
+    #status { color: #00ffff; margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <h2>VFX_PRO GENERATOR</h2>
+  
+  <canvas id="canvas" width="400" height="711"></canvas>
+  
+  <div id="status">Gotowy do pracy</div>
+
+  <div class="controls">
+    <input type="file" id="upload" multiple accept="image/*">
+    <button onclick="startSlideshow()">1. RENDERUJ WIDEO</button>
+    <button onclick="stopRecording()">2. POBIERZ GOTOWY PLIK</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('status');
+    let images = [];
+    let mediaRecorder, chunks = [];
+
+    document.getElementById('upload').onchange = (e) => { 
+      images = Array.from(e.target.files);
+      status.innerText = "Załadowano zdjęć: " + images.length;
+    };
+
+    async function drawFrame(img, alpha, textAlpha) {
+      ctx.clearRect(0, 0, 400, 711);
+      
+      // Zdjęcie
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, 0, 0, 400, 711);
+      
+      // Branding stały
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = "#00ffff";
+      ctx.font = "bold 18px Arial";
+      ctx.fillText("VFX_PRO | DESIGN MASTER", 20, 680);
+      
+      // Tekst animowany
+      ctx.globalAlpha = textAlpha;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 26px Arial";
+      ctx.fillText("PRECISION OVER VOLUME", 30, 355);
+    }
+
+    async function startSlideshow() {
+      if (images.length === 0) return alert("Najpierw wybierz zdjęcia!");
+      
+      status.innerText = "Nagrywanie w toku...";
+      chunks = [];
+      const stream = canvas.captureStream(30);
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+      mediaRecorder.start();
+
+      for (let file of images) {
+        const img = await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.src = e.target.result;
+          };
+          reader.
+    
